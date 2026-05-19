@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>paper-download-crx</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="panel">
+      <h1>paper-download-crx</h1>
+      <p class="subtitle">扩展已就绪，后续可以接论文检索和下载流程。</p>
+
+      <label for="query">论文标题 / DOI / 链接</label>
+      <input id="query" type="text" placeholder="输入关键词" />
+
+      <button id="pingBtn" type="button">检查扩展状态</button>
+
+      <pre id="status" aria-live="polite">等待操作</pre>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
