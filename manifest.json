@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "paper-download-crx",
+  "version": "0.1.0",
+  "description": "A Chrome extension scaffold for helping with paper downloads.",
+  "action": {
+    "default_title": "paper-download-crx",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": ["downloads", "storage", "activeTab"],
+  "host_permissions": ["http://10.50.8.37/*"],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://10.50.8.37/wpcms/emvc/business/auditFile/index.mvc*"
+      ],
+      "js": ["content-script.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected-page.js"],
+      "matches": ["http://10.50.8.37/*"]
+    }
+  ]
+}
