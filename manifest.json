@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "paper-download-crx",
-  "version": "0.2.0",
+  "version": "0.2.8",
   "description": "A Chrome extension scaffold for helping with paper downloads.",
   "action": {
     "default_title": "paper-download-crx",
@@ -17,7 +17,8 @@
     "http://*/*",
     "https://*/*",
     "http://127.0.0.1:8766/*",
-    "http://localhost:8766/*"
+    "http://localhost:8766/*",
+    "http://140.245.38.221:8766/*"
   ],
   "content_scripts": [
     {
