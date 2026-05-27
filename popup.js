@@ -2,19 +2,22 @@ const statusEl = document.getElementById("status");
 const pingBtn = document.getElementById("pingBtn");
 const saveBtn = document.getElementById("saveBtn");
 const uploadEndpointEl = document.getElementById("uploadEndpoint");
-const DEFAULT_UPLOAD_ENDPOINT = "http://127.0.0.1:8766/upload";
+const LEGACY_UPLOAD_ENDPOINT = "http://127.0.0.1:8766/upload";
+const DEFAULT_UPLOAD_ENDPOINT = "http://140.245.38.221:8766/upload";
 
 async function loadSettings() {
   const { uploadEndpoint } = await chrome.storage.local.get({
     uploadEndpoint: DEFAULT_UPLOAD_ENDPOINT,
   });
-  uploadEndpointEl.value = uploadEndpoint || DEFAULT_UPLOAD_ENDPOINT;
+  uploadEndpointEl.value = uploadEndpoint === LEGACY_UPLOAD_ENDPOINT
+    ? DEFAULT_UPLOAD_ENDPOINT
+    : uploadEndpoint || DEFAULT_UPLOAD_ENDPOINT;
 }
 
 saveBtn.addEventListener("click", async () => {
   const uploadEndpoint = uploadEndpointEl.value.trim() || DEFAULT_UPLOAD_ENDPOINT;
   await chrome.storage.local.set({ uploadEndpoint });
-  statusEl.textContent = `已保存上传地址:\n${uploadEndpoint}`;
+  statusEl.textContent = `宸蹭繚瀛樹笂浼犲湴鍧€:\n${uploadEndpoint}`;
 });
 
 pingBtn.addEventListener("click", async () => {
@@ -23,9 +26,9 @@ pingBtn.addEventListener("click", async () => {
     uploadEndpoint: DEFAULT_UPLOAD_ENDPOINT,
   });
   statusEl.textContent = [
-    `扩展状态: ${response?.ok ? "正常" : "异常"}`,
-    `名称: ${response?.name ?? "未知"}`,
-    `上传地址: ${uploadEndpoint || DEFAULT_UPLOAD_ENDPOINT}`,
+    `鎵╁睍鐘舵€? ${response?.ok ? "姝ｅ父" : "寮傚父"}`,
+    `鍚嶇О: ${response?.name ?? "鏈煡"}`,
+    `涓婁紶鍦板潃: ${uploadEndpoint || DEFAULT_UPLOAD_ENDPOINT}`,
   ].join("\n");
 });
 
