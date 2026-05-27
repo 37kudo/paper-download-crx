@@ -52,6 +52,12 @@ button {
   cursor: pointer;
 }
 
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 pre {
   margin: 0;
   padding: 10px 12px;

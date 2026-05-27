@@ -5,8 +5,11 @@
   window.__paperDownloadCrxInjected = true;
 
   const BUTTON_ID = "paper-download-crx-download";
+  const UPLOAD_BUTTON_ID = "paper-download-crx-upload";
   const BUTTON_HOLDER_ID = "paper-download-crx-download-holder";
   const LABEL = "下载";
+  const UPLOAD_LABEL = "上传";
+  let uploadRequestSeq = 0;
 
   function getCtx() {
     if (typeof ctx !== "undefined" && ctx) {
@@ -64,6 +67,18 @@
     window.location.href = `${base}/emvc/cms/upload/download.mvc?nodeId=${encodeURIComponent(nodeId)}`;
   }
 
+  function buildFileDownloadUrl(ids) {
+    const base = getCtx();
+    return ids.length > 1
+      ? `${base}/emvc/cms/upload/downloads.mvc?nodeIds=${encodeURIComponent(ids.join("^"))}`
+      : `${base}/emvc/cms/upload/download.mvc?nodeId=${encodeURIComponent(ids[0])}`;
+  }
+
+  function buildFolderDownloadUrl(nodeId) {
+    const base = getCtx();
+    return `${base}/emvc/cms/upload/download.mvc?nodeId=${encodeURIComponent(nodeId)}`;
+  }
+
   function getAllFileIds() {
     const tableApi = window.layui && window.layui.table;
     if (!tableApi || !tableApi.cache || !tableApi.cache["table2"]) {
@@ -102,6 +117,123 @@
     }
 
     toast("请先选择文件或目录");
+  }
+
+  function getUploadItems() {
+    const selectedFileIds = getSelectedFileIds();
+    if (selectedFileIds.length > 0) {
+      return {
+        mode: "selected",
+        items: selectedFileIds.map((id) => ({
+          id,
+          kind: "file",
+          url: buildFileDownloadUrl([id]),
+        })),
+      };
+    }
+
+    const allFileIds = getAllFileIds();
+    if (allFileIds.length > 0) {
+      return {
+        mode: "current-list",
+        items: allFileIds.map((id) => ({
+          id,
+          kind: "file",
+          url: buildFileDownloadUrl([id]),
+        })),
+      };
+    }
+
+    const folderNodeId = getCurrentFolderNodeId();
+    if (folderNodeId) {
+      return {
+        mode: "current-folder",
+        items: [{
+          id: folderNodeId,
+          kind: "folder",
+          url: buildFolderDownloadUrl(folderNodeId),
+        }],
+      };
+    }
+
+    return { mode: "", items: [] };
+  }
+
+  function setUploadButtonBusy(isBusy) {
+    const button = document.getElementById(UPLOAD_BUTTON_ID);
+    if (!button) {
+      return;
+    }
+    button.disabled = isBusy;
+    button.textContent = isBusy ? "上传中..." : UPLOAD_LABEL;
+  }
+
+  function postUploadRequest(payload) {
+    const requestId = `upload-${Date.now()}-${uploadRequestSeq += 1}`;
+
+    return new Promise((resolve, reject) => {
+      const timer = window.setTimeout(() => {
+        window.removeEventListener("message", onMessage);
+        reject(new Error("上传超时，请确认本机上传服务已启动"));
+      }, 120000);
+
+      function onMessage(event) {
+        if (event.source !== window || event.origin !== location.origin) {
+          return;
+        }
+
+        const message = event.data;
+        if (
+          !message ||
+          message.source !== "paper-download-crx-content" ||
+          message.type !== "UPLOAD_PAPERS_RESULT" ||
+          message.requestId !== requestId
+        ) {
+          return;
+        }
+
+        window.clearTimeout(timer);
+        window.removeEventListener("message", onMessage);
+
+        if (message.ok) {
+          resolve(message.result);
+        } else {
+          reject(new Error(message.error || "上传失败"));
+        }
+      }
+
+      window.addEventListener("message", onMessage);
+      window.postMessage({
+        source: "paper-download-crx-page",
+        type: "UPLOAD_PAPERS",
+        requestId,
+        payload,
+      }, location.origin);
+    });
+  }
+
+  async function handleUpload(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    const payload = getUploadItems();
+    if (!payload.items.length) {
+      toast("请先选择文件或目录");
+      return;
+    }
+
+    setUploadButtonBusy(true);
+    try {
+      const result = await postUploadRequest(payload);
+      const count = result && typeof result.fileCount === "number" ? result.fileCount : payload.items.length;
+      toast(`已上传 ${count} 个底稿到服务器`);
+    } catch (error) {
+      toast(error instanceof Error ? error.message : String(error));
+    } finally {
+      setUploadButtonBusy(false);
+    }
   }
 
   function findAnchorButton() {
@@ -161,7 +293,7 @@
   }
 
   function ensureButton() {
-    if (document.getElementById(BUTTON_ID)) {
+    if (document.getElementById(BUTTON_ID) && document.getElementById(UPLOAD_BUTTON_ID)) {
       return;
     }
 
@@ -188,6 +320,16 @@
     styleButton(button, anchor);
     button.addEventListener("click", handleDownload);
     holder.appendChild(button);
+
+    const uploadButton = document.createElement("button");
+    uploadButton.id = UPLOAD_BUTTON_ID;
+    uploadButton.type = "button";
+    uploadButton.textContent = UPLOAD_LABEL;
+    uploadButton.title = "选中文件时上传文件；未选中文件时上传当前目录";
+    styleButton(uploadButton, anchor);
+    uploadButton.style.marginLeft = "8px";
+    uploadButton.addEventListener("click", handleUpload);
+    holder.appendChild(uploadButton);
 
     toolbar.appendChild(holder);
   }

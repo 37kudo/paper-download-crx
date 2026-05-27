@@ -9,12 +9,15 @@
   <body>
     <main class="panel">
       <h1>paper-download-crx</h1>
-      <p class="subtitle">扩展已就绪，后续可以接论文检索和下载流程。</p>
+      <p class="subtitle">扩展已就绪，可在底稿页面下载或上传底稿。</p>
 
-      <label for="query">论文标题 / DOI / 链接</label>
-      <input id="query" type="text" placeholder="输入关键词" />
+      <label for="uploadEndpoint">上传服务地址</label>
+      <input id="uploadEndpoint" type="url" placeholder="http://127.0.0.1:8766/upload" />
 
-      <button id="pingBtn" type="button">检查扩展状态</button>
+      <div class="actions">
+        <button id="saveBtn" type="button">保存地址</button>
+        <button id="pingBtn" type="button">检查状态</button>
+      </div>
 
       <pre id="status" aria-live="polite">等待操作</pre>
     </main>
